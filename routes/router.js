@@ -56,6 +56,63 @@ router.post('/add/', (req, res, next)=>{
 });
 
 //full exercise log of any user
-router.get('/log')
+//I can retrieve a full exercise log of any user by getting /api/exercise/log with a parameter of userId(_id). Return will be the user object with added array log and count (total exercise count).
+router.get('/log/:id', (req, res, next)=>{
+    let userid = req.params.id;
+    let from= req.query.from;
+    let to = req.query.to;
+    let limit = req.query.limit;
+    console.log(from, to, limit)
+    if(from === undefined && to === undefined && limit === undefined){
+        User.findById({_id:userid}).then((user)=>{
+            return res.send(user)
+        }).catch(next);
+    }else{
+        if(!(dateRegex.test(from) && dateRegex.test(to))){
+            return res.json({"error":"Incorrect query format, ensure from & to are in yyyy-mm-dd & limit is a number"});
+        }
+    }
+    //query from the urls return strings...so I need to reword on this
+
+    if(!(Number.isInteger(limit))){
+        res.json({"error":"Incorrect query format, ensure from & to are in yyyy-mm-dd & limit is an integer"});
+    }
+    // User.findById({_id:userid}).then((user)=>{
+        
+    // });
+    // User.findById({_id:userid}).then((user)=>{
+    //     res.send(user)
+    // }).catch(next);
+});
+
+
+router.get('/test/:id', (req,res,next)=>{
+    let userid = req.params.id;
+    let from= new Date(req.query.from);
+    let to = new Date(req.query.to);
+    let limit = req.query.limit;
+    
+   
+    // User.find().where({"_id":userid}).$where(function(){
+    //     // for(i=0; i <= limit; i++){
+    //     //     return this.log[i].date >= from || this.log[i].date <= to
+    //     // }
+    //     return this.log.filter((item)=>item.date <= this.from || item.date >= this.to)
+    // }).then((user)=>{res.send(user)}).catch(next);
+    User.findById({"_id":userid}).then((user)=>{
+        let logs = user.log.filter((elem)=>new Date(elem.date) >= from || new Date(elem.date) <= to);
+        console.log(logs.length)
+        res.json({
+            "_id":user._id,
+            "username": user.username,
+            "count": logs.length,
+            "log": logs
+        })
+
+    }).catch(next);
+});
+
+//I can retrieve part of the log of any user by also passing along optional parameters of from & to or limit. (Date format yyyy-mm-dd, limit = int)
+
 
 module.exports = router
